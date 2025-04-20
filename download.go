@@ -70,7 +70,7 @@ type DownloadDay struct {
 func (d *DownloadDay) Run() error {
 	outputFile := d.OutputFile
 	if outputFile == "" {
-		outputFile = fmt.Sprintf("input/%d/%d", d.Year, d.Day)
+		outputFile = fmt.Sprintf("input/%d/%02d.txt", d.Year, d.Day)
 	}
 
 	rateLimiter, stop := client.NewRateLimiter(http.DefaultTransport, 2)

@@ -67,7 +67,7 @@ func (s *Service) DownloadYear(ctx context.Context, year int, directory string) 
 	for _, day := range days {
 		day := day
 		group.Go(func() error {
-			if err := s.DownloadDay(groupCtx, year, day, fmt.Sprintf("%s/%02d", directory, day)); err != nil {
+			if err := s.DownloadDay(groupCtx, year, day, fmt.Sprintf("%s/%02d.txt", directory, day)); err != nil {
 				return fmt.Errorf("downloading puzzle input for %d day %d: %w", year, day, err)
 			}
 
