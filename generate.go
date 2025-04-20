@@ -10,6 +10,7 @@ import (
 )
 
 //go:generate go run . generate --output-file solvers.go
+//go:generate go fmt solvers.go
 
 type Generate struct {
 	OutputFile string `required:""`
