@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
+	"strconv"
 )
 
 const baseURL = "https://adventofcode.com"
@@ -44,4 +46,36 @@ func (c *Client) GetPuzzleInput(ctx context.Context, year, day int) (io.ReadClos
 	}
 
 	return resp.Body, nil
+}
+
+func (c *Client) GetDaysForYear(ctx context.Context, year int) ([]int, error) {
+	url := fmt.Sprintf("%s/%d", baseURL, year)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("creating http request: %w", err)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("sending http request: %w", err)
+	}
+
+	defer resp.Body.Close()
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("reading http response: %w", err)
+	}
+
+	var days []int
+	re := regexp.MustCompile(`Day (\d+)`)
+	for _, match := range re.FindAllSubmatch(data, -1) {
+		day, err := strconv.Atoi(string(match[1]))
+		if err != nil {
+			return nil, fmt.Errorf("parsing day %q: %w", match[1], err)
+		}
+
+		days = append(days, day)
+	}
+
+	return days, nil
 }
