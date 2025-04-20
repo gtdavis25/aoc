@@ -107,7 +107,7 @@ func (c *Client) GetYears(ctx context.Context) ([]int, error) {
 	}
 
 	var years []int
-	re := regexp.MustCompile(`\[(\d+)\]`)
+	re := regexp.MustCompile(`\[(\d{4})\]`)
 	for _, match := range re.FindAllSubmatch(data, -1) {
 		year, err := strconv.Atoi(string(match[1]))
 		if err != nil {
