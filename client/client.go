@@ -61,6 +61,10 @@ func (c *Client) GetDaysForYear(ctx context.Context, year int) ([]int, error) {
 	}
 
 	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected http response status: %w", err)
+	}
+
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("reading http response: %w", err)
@@ -78,4 +82,40 @@ func (c *Client) GetDaysForYear(ctx context.Context, year int) ([]int, error) {
 	}
 
 	return days, nil
+}
+
+func (c *Client) GetYears(ctx context.Context) ([]int, error) {
+	url := fmt.Sprintf("%s/events", baseURL)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("creating http request: %w", err)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("sending http request: %w", err)
+	}
+
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected http response status: %w", err)
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("reading http response body: %w", err)
+	}
+
+	var years []int
+	re := regexp.MustCompile(`\[(\d+)\]`)
+	for _, match := range re.FindAllSubmatch(data, -1) {
+		year, err := strconv.Atoi(string(match[1]))
+		if err != nil {
+			return nil, fmt.Errorf("parsing year %q: %w", match[1], err)
+		}
+
+		years = append(years, year)
+	}
+
+	return years, nil
 }

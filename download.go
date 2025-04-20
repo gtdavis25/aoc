@@ -10,8 +10,31 @@ import (
 )
 
 type Download struct {
+	All  DownloadAll  `cmd:""`
 	Year DownloadYear `cmd:""`
 	Day  DownloadDay  `cmd:""`
+}
+
+type DownloadAll struct {
+	Cookie          string `required:""`
+	OutputDirectory string
+}
+
+func (d *DownloadAll) Run() error {
+	outputDirectory := d.OutputDirectory
+	if outputDirectory == "" {
+		outputDirectory = "input"
+	}
+
+	rateLimiter, stop := client.NewRateLimiter(http.DefaultTransport, 2)
+	defer stop()
+	httpClient := http.Client{
+		Transport: rateLimiter,
+	}
+
+	aocClient := client.New(&httpClient, d.Cookie)
+	downloadService := download.NewService(aocClient)
+	return downloadService.DownloadAll(context.Background(), outputDirectory)
 }
 
 type DownloadYear struct {
