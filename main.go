@@ -1,10 +1,20 @@
 package main
 
-import "github.com/alecthomas/kong"
+import (
+	"fmt"
+	"os"
 
-var cli struct{}
+	"github.com/alecthomas/kong"
+)
+
+var cli struct {
+	Download Download `cmd:""`
+}
 
 func main() {
 	context := kong.Parse(&cli)
-	context.Run()
+	if err := context.Run(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }
