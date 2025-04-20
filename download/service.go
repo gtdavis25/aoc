@@ -28,10 +28,6 @@ func NewService(client AOCClient) *Service {
 }
 
 func (s *Service) DownloadAll(ctx context.Context, directory string) error {
-	if err := createDirectoryIfNotExists(directory); err != nil {
-		return err
-	}
-
 	years, err := s.client.GetYears(ctx)
 	if err != nil {
 		return fmt.Errorf("fetching years: %w", err)
@@ -54,10 +50,6 @@ func (s *Service) DownloadAll(ctx context.Context, directory string) error {
 }
 
 func (s *Service) DownloadYear(ctx context.Context, year int, directory string) error {
-	if err := createDirectoryIfNotExists(directory); err != nil {
-		return err
-	}
-
 	days, err := s.client.GetDaysForYear(ctx, year)
 	if err != nil {
 		return fmt.Errorf("fetching days for year %d: %w", year, err)
@@ -79,6 +71,12 @@ func (s *Service) DownloadYear(ctx context.Context, year int, directory string) 
 }
 
 func (s *Service) DownloadDay(ctx context.Context, year, day int, filePath string) error {
+	r, err := s.client.GetPuzzleInput(ctx, year, day)
+	if err != nil {
+		return fmt.Errorf("downloading puzzle input for %d day %d: %w", year, day, err)
+	}
+
+	defer r.Close()
 	i := strings.LastIndex(filePath, "/")
 	if i != -1 {
 		directory := filePath[:i]
@@ -87,12 +85,6 @@ func (s *Service) DownloadDay(ctx context.Context, year, day int, filePath strin
 		}
 	}
 
-	r, err := s.client.GetPuzzleInput(ctx, year, day)
-	if err != nil {
-		return fmt.Errorf("downloading puzzle input for %d day %d: %w", year, day, err)
-	}
-
-	defer r.Close()
 	f, err := os.Create(filePath)
 	if err != nil {
 		return fmt.Errorf("creating output file %s: %w", filePath, err)
