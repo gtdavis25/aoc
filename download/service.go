@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -78,6 +79,14 @@ func (s *Service) DownloadYear(ctx context.Context, year int, directory string) 
 }
 
 func (s *Service) DownloadDay(ctx context.Context, year, day int, filePath string) error {
+	i := strings.LastIndex(filePath, "/")
+	if i != -1 {
+		directory := filePath[:i]
+		if err := createDirectoryIfNotExists(directory); err != nil {
+			return fmt.Errorf("creating output directory %s: %w", directory, err)
+		}
+	}
+
 	r, err := s.client.GetPuzzleInput(ctx, year, day)
 	if err != nil {
 		return fmt.Errorf("downloading puzzle input for %d day %d: %w", year, day, err)
