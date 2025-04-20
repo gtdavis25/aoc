@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/gtdavis25/aoc/2024/day01"
 	"github.com/gtdavis25/aoc/solver"
 )
 
@@ -20,8 +21,12 @@ type SolveDay struct {
 }
 
 func (s *SolveDay) Run() error {
+	params := solver.Params{}
 	var solver solver.Interface
 	switch {
+	case *s == SolveDay{Year: 2024, Day: 1}:
+		solver = day01.NewSolver(params)
+
 	default:
 		return fmt.Errorf("no solver for %d day %d", s.Year, s.Day)
 	}
