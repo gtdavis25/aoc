@@ -62,7 +62,7 @@ func (c *Client) GetDaysForYear(ctx context.Context, year int) ([]int, error) {
 
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected http response status: %w", err)
+		return nil, fmt.Errorf("unexpected http response status: %s", resp.Status)
 	}
 
 	data, err := io.ReadAll(resp.Body)
@@ -98,7 +98,7 @@ func (c *Client) GetYears(ctx context.Context) ([]int, error) {
 
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected http response status: %w", err)
+		return nil, fmt.Errorf("unexpected http response status: %s", resp.Status)
 	}
 
 	data, err := io.ReadAll(resp.Body)
