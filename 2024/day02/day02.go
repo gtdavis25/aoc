@@ -32,7 +32,28 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 		}
 	}
 
-	return solver.Result{Part1: part1}, nil
+	var part2 int
+	var modified []int
+	for _, report := range reports {
+		var safe bool
+		for j := range report {
+			modified = append(modified[:0], report[:j]...)
+			modified = append(modified, report[j+1:]...)
+			if isSafe(modified) {
+				safe = true
+				break
+			}
+		}
+
+		if safe {
+			part2++
+		}
+	}
+
+	return solver.Result{
+		Part1: part1,
+		Part2: part2,
+	}, nil
 }
 
 func isSafe(report []int) bool {
