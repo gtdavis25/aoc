@@ -15,8 +15,8 @@ type SolverFactory func(solver.Params) solver.Interface
 var Solvers = map[int]map[int]SolverFactory{
     {{- range $year, $days := .DaysByYear}}
     {{$year}}: {
-        {{range $days}}
-        {{- .}}: func(params solver.Params) solver.Interface {
+        {{- range $days}}
+        {{.}}: func(params solver.Params) solver.Interface {
             return {{printf "year%dday%02d" $year .}}.NewSolver(params)
         },
         {{- end}}
