@@ -13,7 +13,12 @@ func NewSolver(_ solver.Params) *Solver {
 	return &Solver{}
 }
 
-func (s *Solver) Solve(lines []string) (solver.Result, error) {
+func (s *Solver) Solve(input []string) (solver.Result, error) {
+	lines := make([][]byte, len(input))
+	for i, line := range input {
+		lines[i] = []byte(line)
+	}
+
 	initial, err := getInitialState(lines)
 	if err != nil {
 		return solver.Result{}, fmt.Errorf("getting initial state: %w", err)
@@ -34,8 +39,23 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 		current = next
 	}
 
+	var part2 int
+	for p := range seen {
+		if p == initial.pos {
+			continue
+		}
+
+		lines[p.Y][p.X] = '#'
+		if reachesLoop(initial, lines) {
+			part2++
+		}
+
+		lines[p.Y][p.X] = '.'
+	}
+
 	return solver.Result{
 		Part1: len(seen),
+		Part2: part2,
 	}, nil
 }
 
@@ -44,7 +64,7 @@ type state struct {
 	vel geom2d.Point
 }
 
-func getInitialState(lines []string) (state, error) {
+func getInitialState(lines [][]byte) (state, error) {
 	for y, line := range lines {
 		for x, c := range line {
 			if c == '^' {
@@ -65,7 +85,7 @@ func getInitialState(lines []string) (state, error) {
 	return state{}, fmt.Errorf("no start position")
 }
 
-func nextState(current state, lines []string) (state, bool) {
+func nextState(current state, lines [][]byte) (state, bool) {
 	vel := current.vel
 	for range 4 {
 		nextPos := current.pos.Add(vel)
@@ -88,4 +108,21 @@ func nextState(current state, lines []string) (state, bool) {
 	}
 
 	return current, true
+}
+
+func reachesLoop(initial state, lines [][]byte) bool {
+	seen := make(map[state]struct{})
+	for current := initial; ; {
+		if _, ok := seen[current]; ok {
+			return true
+		}
+
+		seen[current] = struct{}{}
+		next, ok := nextState(current, lines)
+		if !ok {
+			return false
+		}
+
+		current = next
+	}
 }
