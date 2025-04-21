@@ -33,7 +33,7 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 					p1.Subtract(d),
 					p2.Add(d),
 				} {
-					if 0 <= antinode.Y && antinode.Y < len(lines) && 0 <= antinode.X && antinode.X < len(lines[antinode.Y]) {
+					if inBounds(antinode, lines) {
 						antinodes[antinode] = struct{}{}
 					}
 				}
@@ -41,7 +41,45 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 		}
 	}
 
+	part1 := len(antinodes)
+	for _, antennas := range frequencies {
+		for i, p1 := range antennas {
+			for _, p2 := range antennas[:i] {
+				d := p2.Subtract(p1)
+				step := geom2d.Point{
+					X: d.X / gcd(d.X, d.Y),
+					Y: d.Y / gcd(d.X, d.Y),
+				}
+
+				for p := p1; inBounds(p, lines); p = p.Add(step) {
+					antinodes[p] = struct{}{}
+				}
+
+				for p := p2; inBounds(p, lines); p = p.Subtract(step) {
+					antinodes[p] = struct{}{}
+				}
+			}
+		}
+	}
+
 	return solver.Result{
-		Part1: len(antinodes),
+		Part1: part1,
+		Part2: len(antinodes),
 	}, nil
+}
+
+func inBounds(p geom2d.Point, lines []string) bool {
+	return 0 <= p.Y && p.Y < len(lines) && 0 <= p.X && p.X < len(lines[p.Y])
+}
+
+func gcd(a, b int) int {
+	if b == 0 {
+		return a
+	}
+
+	return abs(gcd(b, a%b))
+}
+
+func abs(n int) int {
+	return max(n, -n)
 }
