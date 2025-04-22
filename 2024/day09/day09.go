@@ -1,6 +1,8 @@
 package day09
 
 import (
+	"slices"
+
 	"github.com/gtdavis25/aoc/solver"
 )
 
@@ -11,11 +13,18 @@ func NewSolver(_ solver.Params) *Solver {
 }
 
 func (s *Solver) Solve(lines []string) (solver.Result, error) {
+	return solver.Result{
+		Part1: part1(lines[0]),
+		Part2: part2(lines[0]),
+	}, nil
+}
+
+func part1(input string) int {
 	var blocks []int
 	var empty bool
 	var fileID int
-	for i := range len(lines[0]) {
-		length := int(lines[0][i] - '0')
+	for i := range len(input) {
+		length := int(input[i] - '0')
 		if empty {
 			for range length {
 				blocks = append(blocks, -1)
@@ -53,7 +62,82 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 		}
 	}
 
-	return solver.Result{
-		Part1: checksum,
-	}, nil
+	return checksum
+}
+
+func part2(input string) int {
+	var blocks []block
+	var fileID int
+	var offset int
+	for i := range len(input) {
+		length := int(input[i] - '0')
+		if i%2 == 0 {
+			blocks = append(blocks, block{
+				fileID: fileID,
+				offset: offset,
+				length: length,
+			})
+
+			fileID++
+		} else {
+			blocks = append(blocks, block{
+				fileID: -1,
+				offset: offset,
+				length: length,
+			})
+		}
+
+		offset += length
+	}
+
+	for i := len(blocks) - 1; i > 0; i-- {
+		if blocks[i].fileID == -1 {
+			continue
+		}
+
+		for j := range blocks[:i] {
+			if blocks[j].fileID != -1 || blocks[j].length < blocks[i].length {
+				continue
+			}
+
+			fileBlock := blocks[i]
+			blocks[i].fileID = -1
+			emptyBlock := blocks[j]
+			blocks[j] = block{
+				fileID: fileBlock.fileID,
+				offset: emptyBlock.offset,
+				length: fileBlock.length,
+			}
+
+			if fileBlock.length < emptyBlock.length {
+				i++
+				blocks = slices.Insert(blocks, j+1, block{
+					fileID: -1,
+					offset: emptyBlock.offset + fileBlock.length,
+					length: emptyBlock.length - fileBlock.length,
+				})
+			}
+
+			break
+		}
+	}
+
+	var checksum int
+	for _, block := range blocks {
+		if block.fileID == -1 {
+			continue
+		}
+
+		for i := range block.length {
+			checksum += (block.offset + i) * block.fileID
+		}
+	}
+
+	return checksum
+}
+
+type block struct {
+	fileID int
+	offset int
+	length int
 }
