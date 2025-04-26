@@ -25,6 +25,13 @@ func (p Point) Subtract(d Point) Point {
 	return p.Add(d.Complement())
 }
 
+func (p Point) Times(s int) Point {
+	return Point{
+		X: s * p.X,
+		Y: s * p.Y,
+	}
+}
+
 func Origin() Point {
 	return Point{X: 0, Y: 0}
 }
