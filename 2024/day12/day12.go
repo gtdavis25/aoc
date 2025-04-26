@@ -15,13 +15,16 @@ func NewSolver(_ solver.Params) *Solver {
 
 func (s *Solver) Solve(lines []string) (solver.Result, error) {
 	regions := getRegions(lines)
-	var part1 int
+	var part1, part2 int
 	for _, r := range regions {
-		part1 += getArea(r) * getPerimeter(r)
+		area := getArea(r)
+		part1 += area * getPerimeter(r)
+		part2 += area * getSideCount(r)
 	}
 
 	return solver.Result{
 		Part1: part1,
+		Part2: part2,
 	}, nil
 }
 
@@ -83,4 +86,52 @@ func getPerimeter(r region) int {
 	}
 
 	return perimeter
+}
+
+func getSideCount(r region) int {
+	var sideCount int
+	for d := range geom2d.Origin().Adjacent() {
+		var boundaries []geom2d.Point
+		for _, p := range r.points {
+			if !slices.Contains(r.points, p.Add(d)) {
+				boundaries = append(boundaries, p)
+			}
+		}
+
+		groups := groupByAdjacency(boundaries)
+		sideCount += len(groups)
+	}
+
+	return sideCount
+}
+
+func groupByAdjacency(points []geom2d.Point) [][]geom2d.Point {
+	var groups [][]geom2d.Point
+	for _, p1 := range points {
+		g := []geom2d.Point{p1}
+		for _, group := range groups {
+			for _, p2 := range group {
+				if geom2d.GetDistance(p1, p2) == 1 {
+					g = append(g, group...)
+				}
+			}
+		}
+
+		newGroups := [][]geom2d.Point{g}
+		for _, group := range groups {
+			if !containsAny(group, g) {
+				newGroups = append(newGroups, group)
+			}
+		}
+
+		groups = newGroups
+	}
+
+	return groups
+}
+
+func containsAny(s1, s2 []geom2d.Point) bool {
+	return slices.ContainsFunc(s1, func(p geom2d.Point) bool {
+		return slices.Contains(s2, p)
+	})
 }

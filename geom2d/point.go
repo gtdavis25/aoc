@@ -25,6 +25,10 @@ func (p Point) Subtract(d Point) Point {
 	return p.Add(d.Complement())
 }
 
+func Origin() Point {
+	return Point{X: 0, Y: 0}
+}
+
 func Up() Point {
 	return Point{X: 0, Y: -1}
 }
@@ -54,4 +58,9 @@ func (p Point) Adjacent() iter.Seq[Point] {
 			}
 		}
 	}
+}
+
+func GetDistance(p1, p2 Point) int {
+	d := p2.Subtract(p1)
+	return max(d.X, -d.X) + max(d.Y, -d.Y)
 }
