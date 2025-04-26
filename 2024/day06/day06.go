@@ -83,11 +83,12 @@ func getInitialState(lines [][]byte) (state, error) {
 }
 
 func nextState(current state, lines [][]byte) (state, bool) {
+	bounds := geom2d.Rect{Width: len(lines[0]), Height: len(lines)}
 	vel := current.vel
 	for range 4 {
 		nextPos := current.pos.Add(vel)
 		switch {
-		case nextPos.Y < 0 || len(lines) <= nextPos.Y || nextPos.X < 0 || len(lines[nextPos.Y]) <= nextPos.X:
+		case !bounds.Contains(nextPos):
 			return state{}, false
 
 		case lines[nextPos.Y][nextPos.X] != '#':
