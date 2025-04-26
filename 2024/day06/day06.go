@@ -73,10 +73,7 @@ func getInitialState(lines [][]byte) (state, error) {
 						X: x,
 						Y: y,
 					},
-					vel: geom2d.Point{
-						X: 0,
-						Y: -1,
-					},
+					vel: geom2d.Up(),
 				}, nil
 			}
 		}

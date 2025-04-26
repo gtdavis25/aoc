@@ -57,24 +57,7 @@ func getTrailEnds(lines []string, p geom2d.Point) []geom2d.Point {
 	}
 
 	var trailEnds []geom2d.Point
-	for _, next := range []geom2d.Point{
-		{
-			X: p.X,
-			Y: p.Y - 1,
-		},
-		{
-			X: p.X + 1,
-			Y: p.Y,
-		},
-		{
-			X: p.X,
-			Y: p.Y + 1,
-		},
-		{
-			X: p.X - 1,
-			Y: p.Y,
-		},
-	} {
+	for next := range p.Adjacent() {
 		if next.Y < 0 || next.Y >= len(lines) || next.X < 0 || next.X >= len(lines[next.Y]) ||
 			lines[next.Y][next.X]-lines[p.Y][p.X] != 1 {
 			continue
