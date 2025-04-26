@@ -3,8 +3,8 @@ package day05
 import (
 	"fmt"
 	"slices"
-	"strings"
 
+	"github.com/gtdavis25/aoc/parse"
 	"github.com/gtdavis25/aoc/solver"
 )
 
@@ -33,13 +33,12 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 	i++
 	updates := make([][]int, len(lines)-i)
 	for j := range updates {
-		parts := strings.Split(lines[i+j], ",")
-		updates[j] = make([]int, len(parts))
-		for k, part := range parts {
-			if _, err := fmt.Sscan(part, &updates[j][k]); err != nil {
-				return solver.Result{}, fmt.Errorf("parsing %q on line %d: %w", part, i+j, err)
-			}
+		pages, err := parse.IntSlice(lines[i+j], ",")
+		if err != nil {
+			return solver.Result{}, fmt.Errorf("line %d: %w", i+j, err)
 		}
+
+		updates[j] = pages
 	}
 
 	var part1, part2 int

@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gtdavis25/aoc/parse"
 	"github.com/gtdavis25/aoc/solver"
 )
 
@@ -27,13 +28,9 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 			return solver.Result{}, fmt.Errorf("parsing %q as result on line %d: %w", left, i, err)
 		}
 
-		words := strings.Split(right, " ")
-		operands := make([]int, len(words))
-		for j, word := range words {
-			operands[j], err = strconv.Atoi(word)
-			if err != nil {
-				return solver.Result{}, fmt.Errorf("parsing %q as operand on line %d: %w", word, i, err)
-			}
+		operands, err := parse.IntSlice(right, " ")
+		if err != nil {
+			return solver.Result{}, fmt.Errorf("line %d: %w", i, err)
 		}
 
 		equations[result] = operands

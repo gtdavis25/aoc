@@ -2,8 +2,8 @@ package day02
 
 import (
 	"fmt"
-	"strings"
 
+	"github.com/gtdavis25/aoc/parse"
 	"github.com/gtdavis25/aoc/solver"
 )
 
@@ -16,13 +16,12 @@ func NewSolver(_ solver.Params) *Solver {
 func (s *Solver) Solve(lines []string) (solver.Result, error) {
 	reports := make([][]int, len(lines))
 	for i, line := range lines {
-		words := strings.Split(line, " ")
-		reports[i] = make([]int, len(words))
-		for j, word := range words {
-			if _, err := fmt.Sscan(word, &reports[i][j]); err != nil {
-				return solver.Result{}, fmt.Errorf("parsing %q on line %d position %d: %w", word, i, j, err)
-			}
+		report, err := parse.IntSlice(line, " ")
+		if err != nil {
+			return solver.Result{}, fmt.Errorf("line %d: %w", i, err)
 		}
+
+		reports[i] = report
 	}
 
 	var part1 int
