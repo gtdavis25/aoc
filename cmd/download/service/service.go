@@ -1,4 +1,4 @@
-package download
+package service
 
 import (
 	"context"
@@ -6,28 +6,29 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 
 	"golang.org/x/sync/errgroup"
 )
 
-type AOCClient interface {
+type Client interface {
 	GetPuzzleInput(context.Context, int, int) (io.ReadCloser, error)
 	GetDaysForYear(context.Context, int) ([]int, error)
 	GetYears(context.Context) ([]int, error)
 }
 
 type Service struct {
-	client AOCClient
+	client  Client
+	rootDir string
 }
 
-func NewService(client AOCClient) *Service {
+func New(client Client, rootDir string) *Service {
 	return &Service{
-		client: client,
+		client:  client,
+		rootDir: rootDir,
 	}
 }
 
-func (s *Service) DownloadAll(ctx context.Context, directory string) error {
+func (s *Service) DownloadAll(ctx context.Context) error {
 	years, err := s.client.GetYears(ctx)
 	if err != nil {
 		return fmt.Errorf("fetching years: %w", err)
@@ -37,8 +38,7 @@ func (s *Service) DownloadAll(ctx context.Context, directory string) error {
 	for _, year := range years {
 		year := year
 		group.Go(func() error {
-			directory := fmt.Sprintf("%s/%d", directory, year)
-			if err := s.DownloadYear(groupCtx, year, directory); err != nil {
+			if err := s.DownloadYear(groupCtx, year); err != nil {
 				return fmt.Errorf("year %d: %w", year, err)
 			}
 
@@ -49,7 +49,7 @@ func (s *Service) DownloadAll(ctx context.Context, directory string) error {
 	return group.Wait()
 }
 
-func (s *Service) DownloadYear(ctx context.Context, year int, directory string) error {
+func (s *Service) DownloadYear(ctx context.Context, year int) error {
 	days, err := s.client.GetDaysForYear(ctx, year)
 	if err != nil {
 		return fmt.Errorf("fetching days for year %d: %w", year, err)
@@ -59,7 +59,7 @@ func (s *Service) DownloadYear(ctx context.Context, year int, directory string) 
 	for _, day := range days {
 		day := day
 		group.Go(func() error {
-			if err := s.DownloadDay(groupCtx, year, day, fmt.Sprintf("%s/%02d.txt", directory, day)); err != nil {
+			if err := s.DownloadDay(groupCtx, year, day); err != nil {
 				return fmt.Errorf("downloading puzzle input for %d day %d: %w", year, day, err)
 			}
 
@@ -70,21 +70,19 @@ func (s *Service) DownloadYear(ctx context.Context, year int, directory string) 
 	return group.Wait()
 }
 
-func (s *Service) DownloadDay(ctx context.Context, year, day int, filePath string) error {
+func (s *Service) DownloadDay(ctx context.Context, year, day int) error {
 	r, err := s.client.GetPuzzleInput(ctx, year, day)
 	if err != nil {
 		return fmt.Errorf("downloading puzzle input for %d day %d: %w", year, day, err)
 	}
 
 	defer r.Close()
-	i := strings.LastIndex(filePath, "/")
-	if i != -1 {
-		directory := filePath[:i]
-		if err := createDirectoryIfNotExists(directory); err != nil {
-			return fmt.Errorf("creating output directory %s: %w", directory, err)
-		}
+	directory := fmt.Sprintf("%s/%d", s.rootDir, year)
+	if err := createDirectoryIfNotExists(directory); err != nil {
+		return fmt.Errorf("creating output directory %s: %w", directory, err)
 	}
 
+	filePath := fmt.Sprintf("%s/%02d.txt", directory, day)
 	f, err := os.Create(filePath)
 	if err != nil {
 		return fmt.Errorf("creating output file %s: %w", filePath, err)
@@ -103,7 +101,7 @@ func createDirectoryIfNotExists(directory string) error {
 	switch {
 	case errors.Is(err, os.ErrNotExist):
 		if err := os.MkdirAll(directory, 0777); err != nil {
-			return fmt.Errorf("creating output directory %s: %w", directory, err)
+			return err
 		}
 
 	case err != nil:

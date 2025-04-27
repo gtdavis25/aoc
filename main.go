@@ -8,8 +8,7 @@ import (
 )
 
 var cli struct {
-	Solve    Solve    `cmd:""`
-	Download Download `cmd:""`
+	Solve Solve `cmd:""`
 }
 
 func main() {
