@@ -26,27 +26,7 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 		rows = append(rows, []byte(line))
 	}
 
-	directions := strings.Join(lines[delimiter+1:], "")
-	moves := make([]geom2d.Point, len(directions))
-	for i, c := range directions {
-		switch c {
-		case '^':
-			moves[i] = geom2d.Up()
-
-		case '>':
-			moves[i] = geom2d.Right()
-
-		case 'v':
-			moves[i] = geom2d.Down()
-
-		case '<':
-			moves[i] = geom2d.Left()
-
-		default:
-			return solver.Result{}, fmt.Errorf("invalid direction: %c", c)
-		}
-	}
-
+	moves, err := GetMoves(strings.Join(lines[delimiter+1:], ""))
 	if err := DoMoves(rows, moves); err != nil {
 		return solver.Result{}, err
 	}
@@ -60,7 +40,7 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 		}
 	}
 
-	rows, err := updateMap(lines[:delimiter])
+	rows, err = updateMap(lines[:delimiter])
 	if err != nil {
 		return solver.Result{}, fmt.Errorf("updating map: %w", err)
 	}
@@ -68,6 +48,30 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 	return solver.Result{
 		Part1: part1,
 	}, nil
+}
+
+func GetMoves(directions string) ([]geom2d.Point, error) {
+	moves := make([]geom2d.Point, len(directions))
+	for i := range moves {
+		switch directions[i] {
+		case '^':
+			moves[i] = geom2d.Up()
+
+		case '>':
+			moves[i] = geom2d.Right()
+
+		case 'v':
+			moves[i] = geom2d.Down()
+
+		case '<':
+			moves[i] = geom2d.Left()
+
+		default:
+			return nil, fmt.Errorf("unexpected character: %c", directions[i])
+		}
+	}
+
+	return moves, nil
 }
 
 func DoMoves(rows [][]byte, moves []geom2d.Point) error {
@@ -102,12 +106,12 @@ func getStartPosition(rows [][]byte) (geom2d.Point, error) {
 
 func canMove(rows [][]byte, p geom2d.Point, d geom2d.Point) bool {
 	n := p.Add(d)
-	return rows[n.Y][n.X] == '.' || rows[n.Y][n.X] == 'O' && canMove(rows, n, d)
+	return rows[n.Y][n.X] == '.' || isBox(rows, n) && canMove(rows, n, d)
 }
 
 func move(rows [][]byte, p geom2d.Point, d geom2d.Point) geom2d.Point {
 	n := p.Add(d)
-	if rows[n.Y][n.X] == 'O' {
+	if isBox(rows, n) {
 		move(rows, n, d)
 	}
 
@@ -140,4 +144,14 @@ func updateMap(lines []string) ([][]byte, error) {
 	}
 
 	return updated, nil
+}
+
+func isBox(rows [][]byte, p geom2d.Point) bool {
+	switch rows[p.Y][p.X] {
+	case 'O', '[', ']':
+		return true
+
+	default:
+		return false
+	}
 }
