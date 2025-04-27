@@ -14,7 +14,12 @@ func NewSolver(_ solver.Params) *Solver {
 	return &Solver{}
 }
 
-func (s *Solver) Solve(lines []string) (solver.Result, error) {
+func (s *Solver) Solve(context solver.Context) error {
+	lines, err := context.InputLines()
+	if err != nil {
+		return err
+	}
+
 	var rows [][]byte
 	var delimiter int
 	for i, line := range lines {
@@ -28,24 +33,21 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 
 	moves, err := GetMoves(strings.Join(lines[delimiter+1:], ""))
 	if err := DoMoves(rows, moves); err != nil {
-		return solver.Result{}, err
+		return err
 	}
 
-	part1 := getGPSCoordinates(rows)
+	context.SetPart1(getGPSCoordinates(rows))
 	rows, err = updateMap(lines[:delimiter])
 	if err != nil {
-		return solver.Result{}, fmt.Errorf("updating map: %w", err)
+		return fmt.Errorf("updating map: %w", err)
 	}
 
 	if err := DoMoves(rows, moves); err != nil {
-		return solver.Result{}, err
+		return err
 	}
 
-	part2 := getGPSCoordinates(rows)
-	return solver.Result{
-		Part1: part1,
-		Part2: part2,
-	}, nil
+	context.SetPart2(getGPSCoordinates(rows))
+	return nil
 }
 
 func GetMoves(directions string) ([]geom2d.Point, error) {

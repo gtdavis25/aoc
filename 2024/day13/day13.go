@@ -13,20 +13,25 @@ func NewSolver(_ solver.Params) *Solver {
 	return &Solver{}
 }
 
-func (s *Solver) Solve(lines []string) (solver.Result, error) {
+func (s *Solver) Solve(context solver.Context) error {
+	lines, err := context.InputLines()
+	if err != nil {
+		return err
+	}
+
 	var games []game
 	for i := 0; i+2 < len(lines); i += 4 {
 		var g game
 		if _, err := fmt.Sscanf(lines[i], "Button A: X+%d, Y+%d", &g.a.X, &g.a.Y); err != nil {
-			return solver.Result{}, fmt.Errorf("parsing %q: %w", lines[i], err)
+			return fmt.Errorf("parsing %q: %w", lines[i], err)
 		}
 
 		if _, err := fmt.Sscanf(lines[i+1], "Button B: X+%d, Y+%d", &g.b.X, &g.b.Y); err != nil {
-			return solver.Result{}, fmt.Errorf("parsing %q: %w", lines[i+1], err)
+			return fmt.Errorf("parsing %q: %w", lines[i+1], err)
 		}
 
 		if _, err := fmt.Sscanf(lines[i+2], "Prize: X=%d, Y=%d", &g.p.X, &g.p.Y); err != nil {
-			return solver.Result{}, fmt.Errorf("parsing %q: %w", lines[i+2], err)
+			return fmt.Errorf("parsing %q: %w", lines[i+2], err)
 		}
 
 		games = append(games, g)
@@ -40,10 +45,9 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 		part2 += getMinimumCost(g)
 	}
 
-	return solver.Result{
-		Part1: part1,
-		Part2: part2,
-	}, nil
+	context.SetPart1(part1)
+	context.SetPart2(part2)
+	return nil
 }
 
 type game struct {

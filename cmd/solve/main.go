@@ -1,12 +1,10 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"os"
 	"strconv"
-	"time"
 
 	"github.com/gtdavis25/aoc/internal/registry"
 	"github.com/gtdavis25/aoc/internal/solver"
@@ -39,8 +37,8 @@ func solve() error {
 	}
 
 	params := solver.Params{}
-	solver := registry.GetSolver(year, day, params)
-	if solver == nil {
+	s := registry.GetSolver(year, day, params)
+	if s == nil {
 		return fmt.Errorf("no solver for %d day %d", year, day)
 	}
 
@@ -54,25 +52,23 @@ func solve() error {
 	}
 
 	defer f.Close()
-	var lines []string
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-
-	if err := scanner.Err(); err != nil {
-		return fmt.Errorf("reading input file: %w", err)
-	}
-
-	start := time.Now()
-	result, err := solver.Solve(lines)
-	if err != nil {
+	context := solver.NewContext(f)
+	if err := s.Solve(context); err != nil {
 		return fmt.Errorf("%d day %d: %w", year, day, err)
 	}
 
-	duration := time.Since(start)
-	fmt.Printf("part 1: %d\n", result.Part1)
-	fmt.Printf("part 2: %d\n", result.Part2)
-	fmt.Printf("duration: %v\n", duration)
+	if !context.Part1.Set() && !context.Part2.Set() {
+		return fmt.Errorf("%d day %d: no result", year, day)
+	}
+
+	if context.Part1.Set() {
+		fmt.Printf("part 1: %v\n", context.Part1.Value())
+	}
+
+	if context.Part2.Set() {
+		fmt.Printf("part 2: %d\n", context.Part2.Value())
+	}
+
+	fmt.Printf("duration: %v\n", context.Duration)
 	return nil
 }

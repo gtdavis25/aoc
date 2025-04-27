@@ -8,7 +8,12 @@ func NewSolver(_ solver.Params) *Solver {
 	return &Solver{}
 }
 
-func (s *Solver) Solve(lines []string) (solver.Result, error) {
+func (s *Solver) Solve(context solver.Context) error {
+	lines, err := context.InputLines()
+	if err != nil {
+		return err
+	}
+
 	var part1 int
 	for _, pattern := range [][]string{
 		{
@@ -57,6 +62,7 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 		part1 += countMatches(lines, pattern)
 	}
 
+	context.SetPart1(part1)
 	var part2 int
 	for _, pattern := range [][]string{
 		{
@@ -83,10 +89,8 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 		part2 += countMatches(lines, pattern)
 	}
 
-	return solver.Result{
-		Part1: part1,
-		Part2: part2,
-	}, nil
+	context.SetPart2(part2)
+	return nil
 }
 
 func countMatches(lines, pattern []string) int {

@@ -14,12 +14,17 @@ func NewSolver(_ solver.Params) *Solver {
 	return &Solver{}
 }
 
-func (s *Solver) Solve(lines []string) (solver.Result, error) {
+func (s *Solver) Solve(context solver.Context) error {
+	lines, err := context.InputLines()
+	if err != nil {
+		return err
+	}
+
 	initial := make([]robot, len(lines))
 	for i, line := range lines {
 		var pos, vel geom2d.Point
 		if _, err := fmt.Sscanf(line, "p=%d,%d v=%d,%d", &pos.X, &pos.Y, &vel.X, &vel.Y); err != nil {
-			return solver.Result{}, fmt.Errorf("parsing %q on line %d: %w", line, i, err)
+			return fmt.Errorf("parsing %q on line %d: %w", line, i, err)
 		}
 
 		initial[i] = robot{
@@ -51,6 +56,7 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 		}
 	}
 
+	context.SetPart1(quadrants[0][0] * quadrants[0][1] * quadrants[1][0] * quadrants[1][1])
 	var part2 int
 	robots = slices.Clone(initial)
 	for hasDuplicatePositions(robots) {
@@ -58,10 +64,8 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 		part2++
 	}
 
-	return solver.Result{
-		Part1: quadrants[0][0] * quadrants[0][1] * quadrants[1][0] * quadrants[1][1],
-		Part2: part2,
-	}, nil
+	context.SetPart2(part2)
+	return nil
 }
 
 type robot struct {

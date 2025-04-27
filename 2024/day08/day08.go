@@ -11,7 +11,12 @@ func NewSolver(_ solver.Params) *Solver {
 	return &Solver{}
 }
 
-func (s *Solver) Solve(lines []string) (solver.Result, error) {
+func (s *Solver) Solve(context solver.Context) error {
+	lines, err := context.InputLines()
+	if err != nil {
+		return err
+	}
+
 	frequencies := make(map[byte][]geom2d.Point)
 	for y, line := range lines {
 		for x := range len(line) {
@@ -41,7 +46,7 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 		}
 	}
 
-	part1 := len(antinodes)
+	context.SetPart1(len(antinodes))
 	for _, antennas := range frequencies {
 		for i, p1 := range antennas {
 			for _, p2 := range antennas[:i] {
@@ -62,10 +67,8 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 		}
 	}
 
-	return solver.Result{
-		Part1: part1,
-		Part2: len(antinodes),
-	}, nil
+	context.SetPart2(len(antinodes))
+	return nil
 }
 
 func inBounds(p geom2d.Point, lines []string) bool {

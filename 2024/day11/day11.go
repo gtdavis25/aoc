@@ -11,10 +11,15 @@ func NewSolver(_ solver.Params) *Solver {
 	return &Solver{}
 }
 
-func (s *Solver) Solve(lines []string) (solver.Result, error) {
+func (s *Solver) Solve(context solver.Context) error {
+	lines, err := context.InputLines()
+	if err != nil {
+		return err
+	}
+
 	stones, err := parse.IntSlice(lines[0], " ")
 	if err != nil {
-		return solver.Result{}, err
+		return err
 	}
 
 	memo := make(memo)
@@ -24,10 +29,9 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 		part2 += getStoneCountAfterIterations(memo, n, 75)
 	}
 
-	return solver.Result{
-		Part1: part1,
-		Part2: part2,
-	}, nil
+	context.SetPart1(part1)
+	context.SetPart2(part2)
+	return nil
 }
 
 type memo map[key]int

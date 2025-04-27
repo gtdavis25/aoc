@@ -15,22 +15,27 @@ func NewSolver(_ solver.Params) *Solver {
 	return &Solver{}
 }
 
-func (s *Solver) Solve(lines []string) (solver.Result, error) {
+func (s *Solver) Solve(context solver.Context) error {
+	lines, err := context.InputLines()
+	if err != nil {
+		return err
+	}
+
 	equations := make(map[int][]int)
 	for i, line := range lines {
 		left, right, ok := strings.Cut(line, ": ")
 		if !ok {
-			return solver.Result{}, fmt.Errorf("line %d: could not parse %q", i, line)
+			return fmt.Errorf("line %d: could not parse %q", i, line)
 		}
 
 		result, err := strconv.Atoi(left)
 		if err != nil {
-			return solver.Result{}, fmt.Errorf("parsing %q as result on line %d: %w", left, i, err)
+			return fmt.Errorf("parsing %q as result on line %d: %w", left, i, err)
 		}
 
 		operands, err := parse.IntSlice(right, " ")
 		if err != nil {
-			return solver.Result{}, fmt.Errorf("line %d: %w", i, err)
+			return fmt.Errorf("line %d: %w", i, err)
 		}
 
 		equations[result] = operands
@@ -43,6 +48,7 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 		}
 	}
 
+	context.SetPart1(part1)
 	var part2 int
 	for result, operands := range equations {
 		if canMake(result, operands, []operator{add, multiply, concatenate}) {
@@ -50,10 +56,8 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 		}
 	}
 
-	return solver.Result{
-		Part1: part1,
-		Part2: part2,
-	}, nil
+	context.SetPart2(part2)
+	return nil
 }
 
 type operator func(int, int) int

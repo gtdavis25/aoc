@@ -14,7 +14,12 @@ func NewSolver(_ solver.Params) *Solver {
 	return &Solver{}
 }
 
-func (s *Solver) Solve(lines []string) (solver.Result, error) {
+func (s *Solver) Solve(context solver.Context) error {
+	lines, err := context.InputLines()
+	if err != nil {
+		return err
+	}
+
 	successors := make(map[int][]int)
 	var i int
 	for i = range lines {
@@ -24,7 +29,7 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 
 		var x, y int
 		if _, err := fmt.Sscanf(lines[i], "%d|%d", &x, &y); err != nil {
-			return solver.Result{}, fmt.Errorf("parsing %q on line %d: %w", lines[i], i, err)
+			return fmt.Errorf("parsing %q on line %d: %w", lines[i], i, err)
 		}
 
 		successors[x] = append(successors[x], y)
@@ -35,7 +40,7 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 	for j := range updates {
 		pages, err := parse.IntSlice(lines[i+j], ",")
 		if err != nil {
-			return solver.Result{}, fmt.Errorf("line %d: %w", i+j, err)
+			return fmt.Errorf("line %d: %w", i+j, err)
 		}
 
 		updates[j] = pages
@@ -51,10 +56,9 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 		}
 	}
 
-	return solver.Result{
-		Part1: part1,
-		Part2: part2,
-	}, nil
+	context.SetPart1(part1)
+	context.SetPart2(part2)
+	return nil
 }
 
 func isOrdered(pages []int, successors map[int][]int) bool {

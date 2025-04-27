@@ -13,12 +13,17 @@ func NewSolver(_ solver.Params) *Solver {
 	return &Solver{}
 }
 
-func (s *Solver) Solve(lines []string) (solver.Result, error) {
+func (s *Solver) Solve(context solver.Context) error {
+	lines, err := context.InputLines()
+	if err != nil {
+		return err
+	}
+
 	left := make([]int, len(lines))
 	right := make([]int, len(lines))
 	for i, line := range lines {
 		if _, err := fmt.Sscan(line, &left[i], &right[i]); err != nil {
-			return solver.Result{}, fmt.Errorf("parsing %q on line %d: %w", line, i, err)
+			return fmt.Errorf("parsing %q on line %d: %w", line, i, err)
 		}
 	}
 
@@ -29,6 +34,7 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 		part1 += max(left[i]-right[i], right[i]-left[i])
 	}
 
+	context.SetPart1(part1)
 	freq := make(map[int]int)
 	for _, n := range right {
 		freq[n]++
@@ -39,8 +45,6 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 		part2 += n * freq[n]
 	}
 
-	return solver.Result{
-		Part1: part1,
-		Part2: part2,
-	}, nil
+	context.SetPart2(part2)
+	return nil
 }

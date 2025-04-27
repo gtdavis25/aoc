@@ -13,7 +13,12 @@ func NewSolver(_ solver.Params) *Solver {
 	return &Solver{}
 }
 
-func (s *Solver) Solve(input []string) (solver.Result, error) {
+func (s *Solver) Solve(context solver.Context) error {
+	input, err := context.InputLines()
+	if err != nil {
+		return err
+	}
+
 	lines := make([][]byte, len(input))
 	for i, line := range input {
 		lines[i] = []byte(line)
@@ -21,7 +26,7 @@ func (s *Solver) Solve(input []string) (solver.Result, error) {
 
 	initial, err := getInitialState(lines)
 	if err != nil {
-		return solver.Result{}, fmt.Errorf("getting initial state: %w", err)
+		return fmt.Errorf("getting initial state: %w", err)
 	}
 
 	seen := make(map[geom2d.Point]struct{})
@@ -33,12 +38,13 @@ func (s *Solver) Solve(input []string) (solver.Result, error) {
 		}
 
 		if next == current {
-			return solver.Result{}, fmt.Errorf("guard stuck")
+			return fmt.Errorf("guard stuck")
 		}
 
 		current = next
 	}
 
+	context.SetPart1(len(seen))
 	var part2 int
 	for p := range seen {
 		if p == initial.pos {
@@ -53,10 +59,8 @@ func (s *Solver) Solve(input []string) (solver.Result, error) {
 		lines[p.Y][p.X] = '.'
 	}
 
-	return solver.Result{
-		Part1: len(seen),
-		Part2: part2,
-	}, nil
+	context.SetPart2(part2)
+	return nil
 }
 
 type state struct {

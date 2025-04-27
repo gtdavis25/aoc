@@ -13,12 +13,17 @@ func NewSolver(_ solver.Params) *Solver {
 	return &Solver{}
 }
 
-func (s *Solver) Solve(lines []string) (solver.Result, error) {
+func (s *Solver) Solve(context solver.Context) error {
+	lines, err := context.InputLines()
+	if err != nil {
+		return err
+	}
+
 	reports := make([][]int, len(lines))
 	for i, line := range lines {
 		report, err := parse.IntSlice(line, " ")
 		if err != nil {
-			return solver.Result{}, fmt.Errorf("line %d: %w", i, err)
+			return fmt.Errorf("line %d: %w", i, err)
 		}
 
 		reports[i] = report
@@ -31,6 +36,7 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 		}
 	}
 
+	context.SetPart1(part1)
 	var part2 int
 	var modified []int
 	for _, report := range reports {
@@ -49,10 +55,8 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 		}
 	}
 
-	return solver.Result{
-		Part1: part1,
-		Part2: part2,
-	}, nil
+	context.SetPart2(part2)
+	return nil
 }
 
 func isSafe(report []int) bool {

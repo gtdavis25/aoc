@@ -13,7 +13,12 @@ func NewSolver(_ solver.Params) *Solver {
 	return &Solver{}
 }
 
-func (s *Solver) Solve(lines []string) (solver.Result, error) {
+func (s *Solver) Solve(context solver.Context) error {
+	lines, err := context.InputLines()
+	if err != nil {
+		return err
+	}
+
 	regions := getRegions(lines)
 	var part1, part2 int
 	for _, r := range regions {
@@ -22,10 +27,9 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 		part2 += area * getSideCount(r)
 	}
 
-	return solver.Result{
-		Part1: part1,
-		Part2: part2,
-	}, nil
+	context.SetPart1(part1)
+	context.SetPart2(part2)
+	return nil
 }
 
 func getRegions(lines []string) []region {

@@ -12,11 +12,15 @@ func NewSolver(_ solver.Params) *Solver {
 	return &Solver{}
 }
 
-func (s *Solver) Solve(lines []string) (solver.Result, error) {
-	return solver.Result{
-		Part1: part1(lines[0]),
-		Part2: part2(lines[0]),
-	}, nil
+func (s *Solver) Solve(context solver.Context) error {
+	lines, err := context.InputLines()
+	if err != nil {
+		return err
+	}
+
+	context.SetPart1(part1(lines[0]))
+	context.SetPart2(part2(lines[0]))
+	return nil
 }
 
 func part1(input string) int {
