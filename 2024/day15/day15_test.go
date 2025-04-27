@@ -41,6 +41,25 @@ func TestDoMoves(t *testing.T) {
 				"######",
 			},
 		},
+		{
+			lines: []string{
+				"######",
+				"#....#",
+				"#[][]#",
+				"#.[].#",
+				"#.@..#",
+				"######",
+			},
+			moves: "^",
+			want: []string{
+				"######",
+				"#[][]#",
+				"#.[].#",
+				"#.@..#",
+				"#....#",
+				"######",
+			},
+		},
 	} {
 		t.Run(fmt.Sprintf("test case %d", i+1), func(t *testing.T) {
 			t.Parallel()

@@ -31,22 +31,20 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 		return solver.Result{}, err
 	}
 
-	var part1 int
-	for y, row := range rows {
-		for x, c := range row {
-			if c == 'O' {
-				part1 += 100*y + x
-			}
-		}
-	}
-
+	part1 := getGPSCoordinates(rows)
 	rows, err = updateMap(lines[:delimiter])
 	if err != nil {
 		return solver.Result{}, fmt.Errorf("updating map: %w", err)
 	}
 
+	if err := DoMoves(rows, moves); err != nil {
+		return solver.Result{}, err
+	}
+
+	part2 := getGPSCoordinates(rows)
 	return solver.Result{
 		Part1: part1,
+		Part2: part2,
 	}, nil
 }
 
@@ -106,17 +104,54 @@ func getStartPosition(rows [][]byte) (geom2d.Point, error) {
 
 func canMove(rows [][]byte, p geom2d.Point, d geom2d.Point) bool {
 	n := p.Add(d)
-	return rows[n.Y][n.X] == '.' || isBox(rows, n) && canMove(rows, n, d)
+	if rows[n.Y][n.X] == '#' {
+		return false
+	}
+
+	if d.X == 0 && rows[n.Y][n.X] == ']' && !canMove(rows, n.Add(geom2d.Left()), d) {
+		return false
+	}
+
+	if d.X == 0 && rows[n.Y][n.X] == '[' && !canMove(rows, n.Add(geom2d.Right()), d) {
+		return false
+	}
+
+	if isBox(rows, n) && !canMove(rows, n, d) {
+		return false
+	}
+
+	return true
 }
 
 func move(rows [][]byte, p geom2d.Point, d geom2d.Point) geom2d.Point {
 	n := p.Add(d)
+	if d.X == 0 && rows[n.Y][n.X] == ']' {
+		move(rows, n.Add(geom2d.Left()), d)
+	}
+
+	if d.X == 0 && rows[n.Y][n.X] == '[' {
+		move(rows, n.Add(geom2d.Right()), d)
+	}
+
 	if isBox(rows, n) {
 		move(rows, n, d)
 	}
 
 	rows[p.Y][p.X], rows[n.Y][n.X] = rows[n.Y][n.X], rows[p.Y][p.X]
 	return n
+}
+
+func getGPSCoordinates(rows [][]byte) int {
+	var result int
+	for y, row := range rows {
+		for x, c := range row {
+			if c == 'O' || c == '[' {
+				result += 100*y + x
+			}
+		}
+	}
+
+	return result
 }
 
 func updateMap(lines []string) ([][]byte, error) {
