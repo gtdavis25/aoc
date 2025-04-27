@@ -16,43 +16,39 @@ func NewSolver(_ solver.Params) *Solver {
 
 func (s *Solver) Solve(lines []string) (solver.Result, error) {
 	var rows [][]byte
+	var delimiter int
 	for i, line := range lines {
 		if line == "" {
-			lines = lines[i+1:]
+			delimiter = i
 			break
 		}
 
 		rows = append(rows, []byte(line))
 	}
 
-	position, err := getStartPosition(rows)
-	if err != nil {
-		return solver.Result{}, err
-	}
-
-	movements := strings.Join(lines, "")
-	for _, c := range movements {
-		var direction geom2d.Point
+	directions := strings.Join(lines[delimiter+1:], "")
+	moves := make([]geom2d.Point, len(directions))
+	for i, c := range directions {
 		switch c {
 		case '^':
-			direction = geom2d.Up()
+			moves[i] = geom2d.Up()
 
 		case '>':
-			direction = geom2d.Right()
+			moves[i] = geom2d.Right()
 
 		case 'v':
-			direction = geom2d.Down()
+			moves[i] = geom2d.Down()
 
 		case '<':
-			direction = geom2d.Left()
+			moves[i] = geom2d.Left()
 
 		default:
 			return solver.Result{}, fmt.Errorf("invalid direction: %c", c)
 		}
+	}
 
-		if move(rows, position, direction) {
-			position = position.Add(direction)
-		}
+	if err := DoMoves(rows, moves); err != nil {
+		return solver.Result{}, err
 	}
 
 	var part1 int
@@ -64,9 +60,29 @@ func (s *Solver) Solve(lines []string) (solver.Result, error) {
 		}
 	}
 
+	rows, err := updateMap(lines[:delimiter])
+	if err != nil {
+		return solver.Result{}, fmt.Errorf("updating map: %w", err)
+	}
+
 	return solver.Result{
 		Part1: part1,
 	}, nil
+}
+
+func DoMoves(rows [][]byte, moves []geom2d.Point) error {
+	pos, err := getStartPosition(rows)
+	if err != nil {
+		return err
+	}
+
+	for _, d := range moves {
+		if canMove(rows, pos, d) {
+			pos = move(rows, pos, d)
+		}
+	}
+
+	return nil
 }
 
 func getStartPosition(rows [][]byte) (geom2d.Point, error) {
@@ -84,12 +100,44 @@ func getStartPosition(rows [][]byte) (geom2d.Point, error) {
 	return geom2d.Point{}, fmt.Errorf("no start position")
 }
 
-func move(rows [][]byte, p geom2d.Point, d geom2d.Point) bool {
+func canMove(rows [][]byte, p geom2d.Point, d geom2d.Point) bool {
 	n := p.Add(d)
-	if rows[n.Y][n.X] == '#' || rows[n.Y][n.X] == 'O' && !move(rows, n, d) {
-		return false
+	return rows[n.Y][n.X] == '.' || rows[n.Y][n.X] == 'O' && canMove(rows, n, d)
+}
+
+func move(rows [][]byte, p geom2d.Point, d geom2d.Point) geom2d.Point {
+	n := p.Add(d)
+	if rows[n.Y][n.X] == 'O' {
+		move(rows, n, d)
 	}
 
 	rows[p.Y][p.X], rows[n.Y][n.X] = rows[n.Y][n.X], rows[p.Y][p.X]
-	return true
+	return n
+}
+
+func updateMap(lines []string) ([][]byte, error) {
+	updated := make([][]byte, len(lines))
+	for y, row := range lines {
+		updated[y] = make([]byte, 0, 2*len(row))
+		for _, c := range row {
+			switch c {
+			case '#':
+				updated[y] = append(updated[y], "##"...)
+
+			case '.':
+				updated[y] = append(updated[y], ".."...)
+
+			case 'O':
+				updated[y] = append(updated[y], "[]"...)
+
+			case '@':
+				updated[y] = append(updated[y], "@."...)
+
+			default:
+				return nil, fmt.Errorf("unexpected character: %c", c)
+			}
+		}
+	}
+
+	return updated, nil
 }
