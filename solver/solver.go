@@ -9,4 +9,6 @@ type Result struct {
 	Part2 int
 }
 
+type Factory func(Params) Interface
+
 type Params struct{}

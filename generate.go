@@ -9,8 +9,8 @@ import (
 	"strconv"
 )
 
-//go:generate go run . generate --output-file solvers.go
-//go:generate go fmt solvers.go
+//go:generate go run . generate --output-file registry/registry.go
+//go:generate go fmt registry/registry.go
 
 type Generate struct {
 	OutputFile string `required:""`
@@ -74,7 +74,7 @@ func (g *Generate) Run() error {
 	return nil
 }
 
-//go:embed solvers.go.template
+//go:embed registry.go.template
 var Template string
 
 type TemplateInput struct {

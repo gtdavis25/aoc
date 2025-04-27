@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/gtdavis25/aoc/registry"
 	"github.com/gtdavis25/aoc/solver"
 )
 
@@ -21,7 +22,7 @@ type SolveDay struct {
 
 func (s *SolveDay) Run() error {
 	params := solver.Params{}
-	solver := GetSolver(s.Year, s.Day, params)
+	solver := registry.GetSolver(s.Year, s.Day, params)
 	if solver == nil {
 		return fmt.Errorf("no solver for %d day %d", s.Year, s.Day)
 	}
