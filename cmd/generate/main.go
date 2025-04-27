@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	_ "embed"
 	"fmt"
+	"go/format"
 	"html/template"
 	"os"
 	"regexp"
@@ -67,11 +69,26 @@ func generate() error {
 	}
 
 	defer f.Close()
+	var b bytes.Buffer
 	tmpl := template.New("solvers")
 	template.Must(tmpl.Parse(registryTemplate))
-	tmpl.Execute(f, templateInput{
+	tmpl.Execute(&b, templateInput{
 		DaysByYear: daysByYear,
 	})
+
+	formatted, err := format.Source(b.Bytes())
+	if err != nil {
+		return fmt.Errorf("formatting output file: %w", err)
+	}
+
+	for len(formatted) > 0 {
+		n, err := f.Write(formatted)
+		if err != nil {
+			return fmt.Errorf("writing output file: %w", err)
+		}
+
+		formatted = formatted[n:]
+	}
 
 	return nil
 }
