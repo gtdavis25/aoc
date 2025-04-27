@@ -11,7 +11,7 @@ import (
 	"strconv"
 )
 
-const outputFile = "registry/registry.go"
+const outputFile = "internal/registry/registry.go"
 
 func main() {
 	if err := generate(); err != nil {

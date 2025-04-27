@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/gtdavis25/aoc/solver"
+	"github.com/gtdavis25/aoc/internal/solver"
 )
 
 type Solver struct{}

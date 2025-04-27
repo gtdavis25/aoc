@@ -1,8 +1,8 @@
 package day11
 
 import (
-	"github.com/gtdavis25/aoc/parse"
-	"github.com/gtdavis25/aoc/solver"
+	"github.com/gtdavis25/aoc/internal/parse"
+	"github.com/gtdavis25/aoc/internal/solver"
 )
 
 type Solver struct{}

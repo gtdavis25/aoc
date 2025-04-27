@@ -2,7 +2,7 @@
 package registry
 
 import (
-    "github.com/gtdavis25/aoc/solver"
+    "github.com/gtdavis25/aoc/internal/solver"
     {{range $year, $days := .DaysByYear}}
     {{- range $day := $days}}
     {{printf "year%dday%02d" $year $day }} "{{printf "github.com/gtdavis25/aoc/%d/day%02d" $year $day}}"

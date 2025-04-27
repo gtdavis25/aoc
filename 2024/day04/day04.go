@@ -1,6 +1,6 @@
 package day04
 
-import "github.com/gtdavis25/aoc/solver"
+import "github.com/gtdavis25/aoc/internal/solver"
 
 type Solver struct{}
 

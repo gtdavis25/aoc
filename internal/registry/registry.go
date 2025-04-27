@@ -2,7 +2,7 @@
 package registry
 
 import (
-	"github.com/gtdavis25/aoc/solver"
+	"github.com/gtdavis25/aoc/internal/solver"
 
 	year2024day01 "github.com/gtdavis25/aoc/2024/day01"
 	year2024day02 "github.com/gtdavis25/aoc/2024/day02"

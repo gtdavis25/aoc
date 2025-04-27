@@ -3,7 +3,7 @@ package day09
 import (
 	"slices"
 
-	"github.com/gtdavis25/aoc/solver"
+	"github.com/gtdavis25/aoc/internal/solver"
 )
 
 type Solver struct{}

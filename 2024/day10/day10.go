@@ -3,8 +3,8 @@ package day10
 import (
 	"slices"
 
-	"github.com/gtdavis25/aoc/geom2d"
-	"github.com/gtdavis25/aoc/solver"
+	"github.com/gtdavis25/aoc/internal/geom2d"
+	"github.com/gtdavis25/aoc/internal/solver"
 )
 
 type Solver struct{}

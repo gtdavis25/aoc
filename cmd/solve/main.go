@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gtdavis25/aoc/registry"
-	"github.com/gtdavis25/aoc/solver"
+	"github.com/gtdavis25/aoc/internal/registry"
+	"github.com/gtdavis25/aoc/internal/solver"
 )
 
 var inputFile = flag.String("input-file", "", "the path to the file containing the puzzle input")
