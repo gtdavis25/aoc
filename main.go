@@ -10,7 +10,6 @@ import (
 var cli struct {
 	Solve    Solve    `cmd:""`
 	Download Download `cmd:""`
-	Generate Generate `cmd:""`
 }
 
 func main() {
