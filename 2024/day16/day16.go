@@ -3,6 +3,8 @@ package day16
 import (
 	"container/heap"
 	"fmt"
+	"iter"
+	"slices"
 
 	"github.com/gtdavis25/aoc/internal/geom2d"
 	"github.com/gtdavis25/aoc/internal/solver"
@@ -20,80 +22,117 @@ func (s *Solver) Solve(context solver.Context) error {
 		return err
 	}
 
-	part1, err := getMinimumScore(lines)
+	paths, err := getMinimumScore(lines)
 	if err != nil {
 		return err
 	}
 
+	var part1 int
+	positions := make(map[geom2d.Point]struct{})
+	for p := range paths {
+		if part1 != 0 && p.score > part1 {
+			break
+		}
+
+		part1 = p.score
+		for _, pos := range p.points {
+			positions[pos] = struct{}{}
+		}
+	}
+
 	context.SetPart1(part1)
+	context.SetPart2(len(positions))
 	return nil
 }
 
-func getMinimumScore(lines []string) (int, error) {
+type path struct {
+	points []geom2d.Point
+	score  int
+}
+
+func getMinimumScore(lines []string) (iter.Seq[path], error) {
 	start, err := getStartNode(lines)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	seen := make(map[state]struct{})
-	q := queue{start}
-	for len(q) > 0 {
-		n := heap.Pop(&q).(node)
-		if lines[n.pos.Y][n.pos.X] == 'E' {
-			return n.score, nil
-		}
+	return func(yield func(path) bool) {
+		seen := make(map[state]int)
+		q := queue{start}
+		for len(q) > 0 {
+			n := heap.Pop(&q).(node)
+			if lines[n.pos.Y][n.pos.X] == 'E' && !yield(getPath(n)) {
+				return
+			}
 
-		if _, ok := seen[n.state]; ok {
-			continue
-		}
-
-		seen[n.state] = struct{}{}
-		if lines[n.pos.Y+n.vel.Y][n.pos.X+n.vel.X] != '#' {
-			heap.Push(&q, node{
-				state: state{
-					pos: n.pos.Add(n.vel),
-					vel: n.vel,
-				},
-				score: n.score + 1,
-			})
-		}
-
-		for _, next := range []node{
-			{
-				state: state{
-					pos: n.pos,
-					vel: geom2d.Point{
-						X: -n.vel.Y,
-						Y: n.vel.X,
-					},
-				},
-				score: n.score + 1000,
-			},
-			{
-				state: state{
-					pos: n.pos,
-					vel: geom2d.Point{
-						X: n.vel.Y,
-						Y: -n.vel.X,
-					},
-				},
-				score: n.score + 1000,
-			},
-		} {
-			if _, ok := seen[next.state]; ok {
+			if min, ok := seen[n.state]; ok && n.score > min {
 				continue
 			}
 
-			heap.Push(&q, next)
+			seen[n.state] = n.score
+			if nextPos := n.pos.Add(n.vel); lines[nextPos.Y][nextPos.X] != '#' {
+				heap.Push(&q, node{
+					state: state{
+						pos: nextPos,
+						vel: n.vel,
+					},
+					score: n.score + 1,
+					prev:  &n,
+				})
+			}
+
+			for _, next := range []node{
+				{
+					state: state{
+						pos: n.pos,
+						vel: geom2d.Point{
+							X: -n.vel.Y,
+							Y: n.vel.X,
+						},
+					},
+					score: n.score + 1000,
+					prev:  &n,
+				},
+				{
+					state: state{
+						pos: n.pos,
+						vel: geom2d.Point{
+							X: n.vel.Y,
+							Y: -n.vel.X,
+						},
+					},
+					score: n.score + 1000,
+					prev:  &n,
+				},
+			} {
+				if min, ok := seen[next.state]; ok && next.score > min {
+					continue
+				}
+
+				heap.Push(&q, next)
+			}
+		}
+	}, nil
+}
+
+func getPath(endNode node) path {
+	var points []geom2d.Point
+	for n := &endNode; n != nil; n = n.prev {
+		if !slices.Contains(points, n.pos) {
+			points = append(points, n.pos)
 		}
 	}
 
-	return 0, fmt.Errorf("no solutions")
+	return path{
+		points: points,
+		score:  endNode.score,
+	}
 }
 
 type node struct {
 	state
 	score int
+	prev  *node
 }
 
 func getStartNode(lines []string) (node, error) {
