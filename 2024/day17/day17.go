@@ -2,6 +2,7 @@ package day17
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/gtdavis25/aoc/internal/parse"
@@ -49,12 +50,30 @@ func (s *Solver) Solve(context solver.Context) error {
 	}
 
 	context.SetPart1(strings.Join(part1, ","))
-	return nil
-}
+	queue := make([]int, 8)
+	for i := range queue {
+		queue[i] = i
+	}
 
-type computer struct {
-	i, a, b, c int
-	program    []int
+	for {
+		a := queue[0]
+		queue = queue[1:]
+		output, err := runProgram(a, 0, 0, program)
+		if err != nil {
+			return err
+		}
+
+		if slices.Equal(output, program) {
+			context.SetPart2(a)
+			return nil
+		}
+
+		if slices.Equal(output, program[len(program)-len(output):]) {
+			for i := range 8 {
+				queue = append(queue, a<<3+i)
+			}
+		}
+	}
 }
 
 func runProgram(a, b, c int, program []int) ([]int, error) {
