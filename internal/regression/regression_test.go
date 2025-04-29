@@ -74,7 +74,7 @@ func TestSolvers(t *testing.T) {
 		}
 
 		defer f.Close()
-		var expected map[int]map[int][]int
+		var expected map[int]map[int][]any
 		if err := json.NewDecoder(f).Decode(&expected); err != nil {
 			t.Fatalf("reading test data file: %v", err)
 		}
@@ -91,8 +91,13 @@ func TestSolvers(t *testing.T) {
 
 				for i, got := range parts {
 					t.Run(fmt.Sprintf("%d day %d part %d", year, day, i+1), func(t *testing.T) {
-						if want := expected[year][day][i]; got != want {
-							t.Errorf("got %v, want %v", got, want)
+						want := expected[year][day][i]
+						if wantF, ok := want.(float64); ok {
+							want = int(wantF)
+						}
+
+						if got != want {
+							t.Errorf("got %v (%T), want %v (%T)", got, got, want, want)
 						}
 					})
 				}
