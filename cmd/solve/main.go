@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/gtdavis25/aoc/internal/registry"
 	"github.com/gtdavis25/aoc/internal/solver"
@@ -52,23 +53,11 @@ func solve() error {
 	}
 
 	defer f.Close()
-	context := solver.NewContext(f)
-	if err := s.Solve(context); err != nil {
+	start := time.Now()
+	if err := s.Solve(f, os.Stdout); err != nil {
 		return fmt.Errorf("%d day %d: %w", year, day, err)
 	}
 
-	if !context.Part1.Set() && !context.Part2.Set() {
-		return fmt.Errorf("%d day %d: no result", year, day)
-	}
-
-	if context.Part1.Set() {
-		fmt.Printf("part 1: %v\n", context.Part1.Value())
-	}
-
-	if context.Part2.Set() {
-		fmt.Printf("part 2: %d\n", context.Part2.Value())
-	}
-
-	fmt.Printf("duration: %v\n", context.Duration)
+	fmt.Printf("duration: %v\n", time.Since(start))
 	return nil
 }
