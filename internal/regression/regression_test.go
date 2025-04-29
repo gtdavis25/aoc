@@ -1,153 +1,77 @@
 package regression_test
 
 import (
-	"bufio"
-	"encoding/json"
+	"crypto/md5"
+	"errors"
 	"flag"
 	"fmt"
-	"io"
 	"os"
-	"sync"
+	"slices"
 	"testing"
 
 	"github.com/gtdavis25/aoc/internal/registry"
 	"github.com/gtdavis25/aoc/internal/solver"
 )
 
-var update = flag.Bool("update", false, "controls whether to update the test data file")
+var update = flag.Bool("update", false, "Controls whether to update test data files")
 
-func TestSolvers(t *testing.T) {
-	resultCh := make(chan result)
-	results := make(map[int]map[int][]any)
-	var wg sync.WaitGroup
-	for year, solvers := range registry.Solvers {
-		results[year] = make(map[int][]any)
-		for day, factory := range solvers {
-			results[year][day] = make([]any, 2)
-			wg.Add(1)
-			go func(year, day int, factory solver.Factory) {
-				defer wg.Done()
-				path := fmt.Sprintf("../../input/%d/%02d.txt", year, day)
-				f, err := os.Open(path)
-				if err != nil {
-					t.Errorf("open input file: %v", err)
-					return
-				}
-
-				defer f.Close()
-				s := factory(solver.Params{})
-				if err := s.Solve(testContext{
-					r:       f,
-					year:    year,
-					day:     day,
-					results: resultCh,
-				}); err != nil {
-					t.Errorf("solving %d day %d: %v", year, day, err)
-				}
-			}(year, day, factory)
-		}
-	}
-
-	go func() {
-		wg.Wait()
-		close(resultCh)
-	}()
-
-	for r := range resultCh {
-		results[r.year][r.day][r.part-1] = r.value
-	}
-
+func TestSolver(t *testing.T) {
 	if *update {
-		f, err := os.Create("testdata/results.json")
-		if err != nil {
-			t.Fatalf("opening test data file: %v", err)
+		if err := os.RemoveAll("testdata/TestSolver"); err != nil && !errors.Is(err, os.ErrNotExist) {
+			t.Fatalf("cleaning result directory: %v", err)
 		}
+	}
 
-		defer f.Close()
-		if err := json.NewEncoder(f).Encode(results); err != nil {
-			t.Fatalf("writing test data file: %v", err)
-		}
-	} else {
-		f, err := os.Open("testdata/results.json")
-		if err != nil {
-			t.Fatalf("opening test data file: %v", err)
-		}
+	if err := os.MkdirAll("testdata/TestSolver", 0777); err != nil && !errors.Is(err, os.ErrExist) {
+		t.Fatalf("creating result directory: %v", err)
+	}
 
-		defer f.Close()
-		var expected map[int]map[int][]any
-		if err := json.NewDecoder(f).Decode(&expected); err != nil {
-			t.Fatalf("reading test data file: %v", err)
-		}
-
-		for year, days := range results {
-			if _, ok := expected[year]; !ok {
-				continue
-			}
-
-			for day, parts := range days {
-				if _, ok := expected[year][day]; !ok {
-					continue
+	for year, factories := range registry.Solvers {
+		for day, factory := range factories {
+			year := year
+			day := day
+			solver := factory(solver.Params{})
+			t.Run(fmt.Sprintf("%d day %02d", year, day), func(t *testing.T) {
+				t.Parallel()
+				in, err := os.Open(fmt.Sprintf("../../input/%d/%02d.txt", year, day))
+				if err != nil {
+					t.Fatalf("opening input file: %v", err)
 				}
 
-				for i, got := range parts {
-					t.Run(fmt.Sprintf("%d day %d part %d", year, day, i+1), func(t *testing.T) {
-						want := expected[year][day][i]
-						if wantF, ok := want.(float64); ok {
-							want = int(wantF)
-						}
-
-						if got != want {
-							t.Errorf("got %v (%T), want %v (%T)", got, got, want, want)
-						}
-					})
+				defer in.Close()
+				md5 := md5.New()
+				if err := solver.Solve(in, md5); err != nil {
+					t.Fatalf("running solver: %v", err)
 				}
-			}
+
+				result := md5.Sum(make([]byte, 0, 16))
+				if *update {
+					out, err := os.Create(fmt.Sprintf("testdata/%s.md5", t.Name()))
+					if err != nil {
+						t.Fatalf("creating result file: %v", err)
+					}
+
+					defer out.Close()
+					if _, err := fmt.Fprintf(out, "%x", result); err != nil {
+						t.Fatalf("writing result file: %v", err)
+					}
+				} else {
+					out, err := os.Open(fmt.Sprintf("testdata/%s.md5", t.Name()))
+					if err != nil {
+						t.Fatalf("opening result file: %v", err)
+					}
+
+					defer out.Close()
+					var want []byte
+					if _, err := fmt.Fscanf(out, "%x", &want); err != nil {
+						t.Fatalf("reading result file: %v", err)
+					}
+
+					if !slices.Equal(want, result) {
+						t.Fatalf("got %x, want %x", result, want)
+					}
+				}
+			})
 		}
 	}
-}
-
-type testContext struct {
-	r       io.Reader
-	year    int
-	day     int
-	results chan<- result
-}
-
-func (c testContext) InputLines() ([]string, error) {
-	var lines []string
-	scanner := bufio.NewScanner(c.r)
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("reading input: %w", err)
-	}
-
-	return lines, nil
-}
-
-func (c testContext) SetPart1(value any) {
-	c.results <- result{
-		year:  c.year,
-		day:   c.day,
-		part:  1,
-		value: value,
-	}
-}
-
-func (c testContext) SetPart2(value any) {
-	c.results <- result{
-		year:  c.year,
-		day:   c.day,
-		part:  2,
-		value: value,
-	}
-}
-
-type result struct {
-	year  int
-	day   int
-	part  int
-	value any
 }
