@@ -2,9 +2,11 @@ package day14
 
 import (
 	"fmt"
+	"io"
 	"slices"
 
 	"github.com/gtdavis25/aoc/internal/geom2d"
+	"github.com/gtdavis25/aoc/internal/input"
 	"github.com/gtdavis25/aoc/internal/solver"
 )
 
@@ -14,8 +16,8 @@ func NewSolver(_ solver.Params) *Solver {
 	return &Solver{}
 }
 
-func (s *Solver) Solve(context solver.Context) error {
-	lines, err := context.InputLines()
+func (s *Solver) Solve(r io.Reader, w io.Writer) error {
+	lines, err := input.ReadLines(r)
 	if err != nil {
 		return err
 	}
@@ -56,7 +58,7 @@ func (s *Solver) Solve(context solver.Context) error {
 		}
 	}
 
-	context.SetPart1(quadrants[0][0] * quadrants[0][1] * quadrants[1][0] * quadrants[1][1])
+	fmt.Fprintf(w, "part 1: %d\n", quadrants[0][0]*quadrants[0][1]*quadrants[1][0]*quadrants[1][1])
 	var part2 int
 	robots = slices.Clone(initial)
 	for hasDuplicatePositions(robots) {
@@ -64,7 +66,7 @@ func (s *Solver) Solve(context solver.Context) error {
 		part2++
 	}
 
-	context.SetPart2(part2)
+	fmt.Fprintf(w, "part 2: %d\n", part2)
 	return nil
 }
 

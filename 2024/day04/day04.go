@@ -1,6 +1,12 @@
 package day04
 
-import "github.com/gtdavis25/aoc/internal/solver"
+import (
+	"fmt"
+	"io"
+
+	"github.com/gtdavis25/aoc/internal/input"
+	"github.com/gtdavis25/aoc/internal/solver"
+)
 
 type Solver struct{}
 
@@ -8,8 +14,8 @@ func NewSolver(_ solver.Params) *Solver {
 	return &Solver{}
 }
 
-func (s *Solver) Solve(context solver.Context) error {
-	lines, err := context.InputLines()
+func (s *Solver) Solve(r io.Reader, w io.Writer) error {
+	lines, err := input.ReadLines(r)
 	if err != nil {
 		return err
 	}
@@ -62,7 +68,7 @@ func (s *Solver) Solve(context solver.Context) error {
 		part1 += countMatches(lines, pattern)
 	}
 
-	context.SetPart1(part1)
+	fmt.Fprintf(w, "part 1: %d\n", part1)
 	var part2 int
 	for _, pattern := range [][]string{
 		{
@@ -89,7 +95,7 @@ func (s *Solver) Solve(context solver.Context) error {
 		part2 += countMatches(lines, pattern)
 	}
 
-	context.SetPart2(part2)
+	fmt.Fprintf(w, "part 2: %d\n", part2)
 	return nil
 }
 

@@ -1,7 +1,11 @@
 package day08
 
 import (
+	"fmt"
+	"io"
+
 	"github.com/gtdavis25/aoc/internal/geom2d"
+	"github.com/gtdavis25/aoc/internal/input"
 	"github.com/gtdavis25/aoc/internal/solver"
 )
 
@@ -11,8 +15,8 @@ func NewSolver(_ solver.Params) *Solver {
 	return &Solver{}
 }
 
-func (s *Solver) Solve(context solver.Context) error {
-	lines, err := context.InputLines()
+func (s *Solver) Solve(r io.Reader, w io.Writer) error {
+	lines, err := input.ReadLines(r)
 	if err != nil {
 		return err
 	}
@@ -46,7 +50,7 @@ func (s *Solver) Solve(context solver.Context) error {
 		}
 	}
 
-	context.SetPart1(len(antinodes))
+	fmt.Fprintf(w, "part 1: %d\n", len(antinodes))
 	for _, antennas := range frequencies {
 		for i, p1 := range antennas {
 			for _, p2 := range antennas[:i] {
@@ -67,7 +71,7 @@ func (s *Solver) Solve(context solver.Context) error {
 		}
 	}
 
-	context.SetPart2(len(antinodes))
+	fmt.Fprintf(w, "part 2: %d\n", len(antinodes))
 	return nil
 }
 

@@ -2,8 +2,10 @@ package day06
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/gtdavis25/aoc/internal/geom2d"
+	"github.com/gtdavis25/aoc/internal/input"
 	"github.com/gtdavis25/aoc/internal/solver"
 )
 
@@ -13,8 +15,8 @@ func NewSolver(_ solver.Params) *Solver {
 	return &Solver{}
 }
 
-func (s *Solver) Solve(context solver.Context) error {
-	input, err := context.InputLines()
+func (s *Solver) Solve(r io.Reader, w io.Writer) error {
+	input, err := input.ReadLines(r)
 	if err != nil {
 		return err
 	}
@@ -44,7 +46,7 @@ func (s *Solver) Solve(context solver.Context) error {
 		current = next
 	}
 
-	context.SetPart1(len(seen))
+	fmt.Fprintf(w, "part 1: %d\n", len(seen))
 	var part2 int
 	for p := range seen {
 		if p == initial.pos {
@@ -59,7 +61,7 @@ func (s *Solver) Solve(context solver.Context) error {
 		lines[p.Y][p.X] = '.'
 	}
 
-	context.SetPart2(part2)
+	fmt.Fprintf(w, "part 2: %d\n", part2)
 	return nil
 }
 

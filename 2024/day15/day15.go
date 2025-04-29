@@ -2,9 +2,11 @@ package day15
 
 import (
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/gtdavis25/aoc/internal/geom2d"
+	"github.com/gtdavis25/aoc/internal/input"
 	"github.com/gtdavis25/aoc/internal/solver"
 )
 
@@ -14,8 +16,8 @@ func NewSolver(_ solver.Params) *Solver {
 	return &Solver{}
 }
 
-func (s *Solver) Solve(context solver.Context) error {
-	lines, err := context.InputLines()
+func (s *Solver) Solve(r io.Reader, w io.Writer) error {
+	lines, err := input.ReadLines(r)
 	if err != nil {
 		return err
 	}
@@ -36,7 +38,7 @@ func (s *Solver) Solve(context solver.Context) error {
 		return err
 	}
 
-	context.SetPart1(getGPSCoordinates(rows))
+	fmt.Fprintf(w, "part 1: %d\n", getGPSCoordinates(rows))
 	rows, err = updateMap(lines[:delimiter])
 	if err != nil {
 		return fmt.Errorf("updating map: %w", err)
@@ -46,7 +48,7 @@ func (s *Solver) Solve(context solver.Context) error {
 		return err
 	}
 
-	context.SetPart2(getGPSCoordinates(rows))
+	fmt.Fprintf(w, "part 2: %d\n", getGPSCoordinates(rows))
 	return nil
 }
 

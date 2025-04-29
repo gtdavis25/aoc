@@ -2,9 +2,11 @@ package day17
 
 import (
 	"fmt"
+	"io"
 	"slices"
 	"strings"
 
+	"github.com/gtdavis25/aoc/internal/input"
 	"github.com/gtdavis25/aoc/internal/parse"
 	"github.com/gtdavis25/aoc/internal/solver"
 )
@@ -15,8 +17,8 @@ func NewSolver(_ solver.Params) *Solver {
 	return &Solver{}
 }
 
-func (s *Solver) Solve(context solver.Context) error {
-	lines, err := context.InputLines()
+func (s *Solver) Solve(r io.Reader, w io.Writer) error {
+	lines, err := input.ReadLines(r)
 	if err != nil {
 		return err
 	}
@@ -49,7 +51,7 @@ func (s *Solver) Solve(context solver.Context) error {
 		part1 = append(part1, fmt.Sprint(n))
 	}
 
-	context.SetPart1(strings.Join(part1, ","))
+	fmt.Fprintf(w, "part 1: %s\n", strings.Join(part1, ","))
 	queue := make([]int, 8)
 	for i := range queue {
 		queue[i] = i
@@ -64,7 +66,7 @@ func (s *Solver) Solve(context solver.Context) error {
 		}
 
 		if slices.Equal(output, program) {
-			context.SetPart2(a)
+			fmt.Fprintf(w, "part 2: %d\n", a)
 			return nil
 		}
 

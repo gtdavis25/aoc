@@ -2,8 +2,10 @@ package day01
 
 import (
 	"fmt"
+	"io"
 	"sort"
 
+	"github.com/gtdavis25/aoc/internal/input"
 	"github.com/gtdavis25/aoc/internal/solver"
 )
 
@@ -13,8 +15,8 @@ func NewSolver(_ solver.Params) *Solver {
 	return &Solver{}
 }
 
-func (s *Solver) Solve(context solver.Context) error {
-	lines, err := context.InputLines()
+func (s *Solver) Solve(r io.Reader, w io.Writer) error {
+	lines, err := input.ReadLines(r)
 	if err != nil {
 		return err
 	}
@@ -34,7 +36,7 @@ func (s *Solver) Solve(context solver.Context) error {
 		part1 += max(left[i]-right[i], right[i]-left[i])
 	}
 
-	context.SetPart1(part1)
+	fmt.Fprintf(w, "part 1: %d\n", part1)
 	freq := make(map[int]int)
 	for _, n := range right {
 		freq[n]++
@@ -45,6 +47,6 @@ func (s *Solver) Solve(context solver.Context) error {
 		part2 += n * freq[n]
 	}
 
-	context.SetPart2(part2)
+	fmt.Fprintf(w, "part 2: %d\n", part2)
 	return nil
 }
