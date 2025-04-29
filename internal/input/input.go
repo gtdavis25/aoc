@@ -2,6 +2,7 @@ package input
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 )
 
@@ -13,7 +14,7 @@ func ReadLines(r io.Reader) ([]string, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("reading input: %w", err)
 	}
 
 	return lines, nil
