@@ -3,6 +3,7 @@ package day18
 import (
 	"fmt"
 	"io"
+	"slices"
 
 	"github.com/gtdavis25/aoc/internal/geom2d"
 	"github.com/gtdavis25/aoc/internal/input"
@@ -31,23 +32,26 @@ func (s *Solver) Solve(r io.Reader, w io.Writer) error {
 		bytes = append(bytes, p)
 	}
 
-	part1, ok := getShortestPath(bytes[:1024], 71, 71)
+	path, ok := getShortestPath(bytes[:1024], 71, 71)
 	if !ok {
 		return fmt.Errorf("part 1: path not found")
 	}
 
-	fmt.Fprintf(w, "part 1: %d\n", part1)
-	for i := range len(bytes) - 1025 {
-		if _, ok := getShortestPath(bytes[:1025+i], 71, 71); !ok {
-			fmt.Fprintf(w, "part 2: %d,%d\n", bytes[1024+i].X, bytes[1024+i].Y)
-			return nil
+	fmt.Fprintf(w, "part 1: %d\n", len(path)-1)
+	for i := range len(bytes) - 1024 {
+		if slices.Contains(path, bytes[1024+i]) {
+			var ok bool
+			if path, ok = getShortestPath(bytes[:1025+i], 71, 71); !ok {
+				fmt.Fprintf(w, "part 2: %d,%d\n", bytes[1024+i].X, bytes[1024+i].Y)
+				return nil
+			}
 		}
 	}
 
-	return nil
+	return fmt.Errorf("solution to part 2 not found")
 }
 
-func getShortestPath(bytes []geom2d.Point, w, h int) (int, bool) {
+func getShortestPath(bytes []geom2d.Point, w, h int) ([]geom2d.Point, bool) {
 	bounds := geom2d.Rect{
 		X:      0,
 		Y:      0,
@@ -63,8 +67,9 @@ func getShortestPath(bytes []geom2d.Point, w, h int) (int, bool) {
 	seen := make(map[geom2d.Point]struct{})
 	queue := []state{
 		{
-			pos: geom2d.Origin(),
-			t:   0,
+			pos:  geom2d.Origin(),
+			t:    0,
+			prev: nil,
 		},
 	}
 
@@ -72,7 +77,7 @@ func getShortestPath(bytes []geom2d.Point, w, h int) (int, bool) {
 		s := queue[0]
 		queue = queue[1:]
 		if s.pos.X == w-1 && s.pos.Y == h-1 {
-			return s.t, true
+			return getPath(&s), true
 		}
 
 		if _, ok := seen[s.pos]; ok {
@@ -86,16 +91,27 @@ func getShortestPath(bytes []geom2d.Point, w, h int) (int, bool) {
 			}
 
 			queue = append(queue, state{
-				pos: next,
-				t:   s.t + 1,
+				pos:  next,
+				t:    s.t + 1,
+				prev: &s,
 			})
 		}
 	}
 
-	return 0, false
+	return nil, false
 }
 
 type state struct {
-	pos geom2d.Point
-	t   int
+	pos  geom2d.Point
+	t    int
+	prev *state
+}
+
+func getPath(end *state) []geom2d.Point {
+	var points []geom2d.Point
+	for s := end; s != nil; s = s.prev {
+		points = append(points, s.pos)
+	}
+
+	return points
 }
