@@ -37,6 +37,13 @@ func (s *Solver) Solve(r io.Reader, w io.Writer) error {
 	}
 
 	fmt.Fprintf(w, "part 1: %d\n", part1)
+	for i := range len(bytes) - 1025 {
+		if _, ok := getShortestPath(bytes[:1025+i], 71, 71); !ok {
+			fmt.Fprintf(w, "part 2: %d,%d\n", bytes[1024+i].X, bytes[1024+i].Y)
+			return nil
+		}
+	}
+
 	return nil
 }
 
