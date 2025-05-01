@@ -7,7 +7,7 @@ import (
 	"io"
 	"os"
 
-	"golang.org/x/sync/errgroup"
+	"github.com/gtdavis25/aoc/internal/group"
 )
 
 type Client interface {
@@ -34,7 +34,7 @@ func (s *Service) DownloadAll(ctx context.Context) error {
 		return fmt.Errorf("fetching years: %w", err)
 	}
 
-	group, groupCtx := errgroup.WithContext(ctx)
+	group, groupCtx := group.NewWithContext(ctx)
 	for _, year := range years {
 		year := year
 		group.Go(func() error {
@@ -55,7 +55,7 @@ func (s *Service) DownloadYear(ctx context.Context, year int) error {
 		return fmt.Errorf("fetching days for year %d: %w", year, err)
 	}
 
-	group, groupCtx := errgroup.WithContext(ctx)
+	group, groupCtx := group.NewWithContext(ctx)
 	for _, day := range days {
 		day := day
 		group.Go(func() error {
