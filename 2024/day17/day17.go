@@ -52,9 +52,9 @@ func (s *Solver) Solve(r io.Reader, w io.Writer) error {
 	}
 
 	fmt.Fprintf(w, "part 1: %s\n", strings.Join(part1, ","))
-	queue := make([]int, 8)
+	queue := make([]int, 7)
 	for i := range queue {
-		queue[i] = i
+		queue[i] = i + 1
 	}
 
 	for {
