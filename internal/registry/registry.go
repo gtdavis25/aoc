@@ -23,6 +23,7 @@ import (
 	year2024day17 "github.com/gtdavis25/aoc/2024/day17"
 	year2024day18 "github.com/gtdavis25/aoc/2024/day18"
 	year2024day19 "github.com/gtdavis25/aoc/2024/day19"
+	year2024day20 "github.com/gtdavis25/aoc/2024/day20"
 )
 
 func GetSolver(year, day int, params solver.Params) solver.Interface {
@@ -95,6 +96,9 @@ var Solvers = map[int]map[int]solver.Factory{
 		},
 		19: func(params solver.Params) solver.Interface {
 			return year2024day19.NewSolver(params)
+		},
+		20: func(params solver.Params) solver.Interface {
+			return year2024day20.NewSolver(params)
 		},
 	},
 }
