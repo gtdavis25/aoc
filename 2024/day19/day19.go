@@ -22,23 +22,36 @@ func (s *Solver) Solve(r io.Reader, w io.Writer) error {
 	}
 
 	patterns := strings.Split(lines[0], ", ")
-	var part1 int
+	var part1, part2 int
 	for _, design := range lines[2:] {
-		if isPossible(design, patterns) {
+		c := countWaysToMake(design, patterns, make(map[string]int))
+		part2 += c
+		if c > 0 {
 			part1++
 		}
 	}
 
 	fmt.Fprintf(w, "part 1: %d\n", part1)
+	fmt.Fprintf(w, "part 2: %d\n", part2)
 	return nil
 }
 
-func isPossible(d string, patterns []string) bool {
-	for _, p := range patterns {
-		if d == p || strings.HasPrefix(d, p) && isPossible(d[len(p):], patterns) {
-			return true
+func countWaysToMake(design string, patterns []string, memo map[string]int) int {
+	if c, ok := memo[design]; ok {
+		return c
+	}
+
+	var count int
+	for _, pattern := range patterns {
+		switch {
+		case design == pattern:
+			count++
+
+		case strings.HasPrefix(design, pattern):
+			count += countWaysToMake(design[len(pattern):], patterns, memo)
 		}
 	}
 
-	return false
+	memo[design] = count
+	return count
 }
