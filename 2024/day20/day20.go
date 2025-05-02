@@ -36,24 +36,8 @@ func (s *Solver) Solve(r io.Reader, w io.Writer) error {
 	dStart := getDistances(lines, start)
 	dEnd := getDistances(lines, end)
 	budget := dEnd[start.Y][start.X] - 100
-	bounds := geom2d.Rect{Width: len(lines[0]), Height: len(lines)}
-	var part1 int
-	for y := 1; y+1 < bounds.Height; y++ {
-		for x := 1; x+1 < bounds.Width; x++ {
-			if lines[y][x] == '#' {
-				continue
-			}
-
-			s := geom2d.Point{X: x, Y: y}
-			for e := range getCheatDestinations(lines, s, 2) {
-				if dStart[s.Y][s.X]+geom2d.GetDistance(s, e)+dEnd[e.Y][e.X] <= budget {
-					part1++
-				}
-			}
-		}
-	}
-
-	fmt.Fprintf(w, "part 1: %d\n", part1)
+	fmt.Fprintf(w, "part 1: %d\n", countCheats(lines, dStart, dEnd, budget, 2))
+	fmt.Fprintf(w, "part 2: %d\n", countCheats(lines, dStart, dEnd, budget, 20))
 	return nil
 }
 
@@ -102,6 +86,27 @@ func getDistances(lines []string, origin geom2d.Point) [][]int {
 	}
 
 	return distances
+}
+
+func countCheats(lines []string, dStart, dEnd [][]int, budget, maxDistance int) int {
+	var count int
+	bounds := geom2d.Rect{Width: len(lines[0]), Height: len(lines)}
+	for y := 1; y+1 < bounds.Height; y++ {
+		for x := 1; x+1 < bounds.Width; x++ {
+			if lines[y][x] == '#' {
+				continue
+			}
+
+			s := geom2d.Point{X: x, Y: y}
+			for e := range getCheatDestinations(lines, s, maxDistance) {
+				if dStart[s.Y][s.X]+geom2d.GetDistance(s, e)+dEnd[e.Y][e.X] <= budget {
+					count++
+				}
+			}
+		}
+	}
+
+	return count
 }
 
 func getCheatDestinations(lines []string, start geom2d.Point, maxSteps int) iter.Seq[geom2d.Point] {
