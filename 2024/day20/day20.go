@@ -3,6 +3,7 @@ package day20
 import (
 	"fmt"
 	"io"
+	"slices"
 
 	"github.com/gtdavis25/aoc/internal/geom2d"
 	"github.com/gtdavis25/aoc/internal/input"
@@ -16,34 +17,47 @@ func NewSolver(_ solver.Params) *Solver {
 }
 
 func (s *Solver) Solve(r io.Reader, w io.Writer) error {
-	lines, err := input.ReadLinesBytes(r)
+	lines, err := input.ReadLines(r)
 	if err != nil {
 		return err
 	}
 
-	shortestPath, err := getShortestPath(lines)
-	if err != nil {
-		return err
+	start, ok := findPosition(lines, 'S')
+	if !ok {
+		return fmt.Errorf("no start position")
 	}
 
+	end, ok := findPosition(lines, 'E')
+	if !ok {
+		return fmt.Errorf("no end position")
+	}
+
+	dStart := getDistances(lines, start)
+	dEnd := getDistances(lines, end)
+	budget := dEnd[start.Y][start.X] - 100
+	bounds := geom2d.Rect{Width: len(lines[0]), Height: len(lines)}
 	var part1 int
-	for y := 1; y+1 < len(lines); y++ {
-		for x := 1; x+1 < len(lines[y]); x++ {
-			if lines[y][x] != '#' {
+	for y := 1; y+1 < bounds.Height; y++ {
+		for x := 1; x+1 < bounds.Width; x++ {
+			if lines[y][x] == '#' {
 				continue
 			}
 
-			lines[y][x] = '.'
-			t, err := getShortestPath(lines)
-			if err != nil {
-				return err
-			}
+			p1 := geom2d.Point{X: x, Y: y}
+			for _, p2 := range []geom2d.Point{
+				p1.Add(geom2d.Up().Times(2)),
+				p1.Add(geom2d.Right().Times(2)),
+				p1.Add(geom2d.Down().Times(2)),
+				p1.Add(geom2d.Left().Times(2)),
+			} {
+				if !bounds.Contains(p2) || lines[p2.Y][p2.X] == '#' {
+					continue
+				}
 
-			if t+100 <= shortestPath {
-				part1++
+				if dStart[p1.Y][p1.X]+geom2d.GetDistance(p1, p2)+dEnd[p2.Y][p2.X] <= budget {
+					part1++
+				}
 			}
-
-			lines[y][x] = '#'
 		}
 	}
 
@@ -51,26 +65,38 @@ func (s *Solver) Solve(r io.Reader, w io.Writer) error {
 	return nil
 }
 
-func getShortestPath(lines [][]byte) (int, error) {
-	start, err := getStartPosition(lines)
-	if err != nil {
-		return 0, err
+func findPosition(lines []string, c byte) (geom2d.Point, bool) {
+	for y, line := range lines {
+		for x := range len(line) {
+			if line[x] == c {
+				return geom2d.Point{
+					X: x,
+					Y: y,
+				}, true
+			}
+		}
+	}
+
+	return geom2d.Point{}, false
+}
+
+func getDistances(lines []string, origin geom2d.Point) [][]int {
+	distances := make([][]int, len(lines))
+	for y, line := range lines {
+		distances[y] = slices.Repeat([]int{-1}, len(line))
 	}
 
 	seen := make(map[geom2d.Point]struct{})
-	queue := []state{{pos: start, t: 0}}
+	queue := []state{{pos: origin, t: 0}}
 	for len(queue) > 0 {
 		s := queue[0]
 		queue = queue[1:]
-		if lines[s.pos.Y][s.pos.X] == 'E' {
-			return s.t, nil
-		}
-
 		if _, ok := seen[s.pos]; ok {
 			continue
 		}
 
 		seen[s.pos] = struct{}{}
+		distances[s.pos.Y][s.pos.X] = s.t
 		for p := range s.pos.Adjacent() {
 			if lines[p.Y][p.X] == '#' {
 				continue
@@ -83,22 +109,7 @@ func getShortestPath(lines [][]byte) (int, error) {
 		}
 	}
 
-	return 0, fmt.Errorf("end unreachable")
-}
-
-func getStartPosition(lines [][]byte) (geom2d.Point, error) {
-	for y, line := range lines {
-		for x, c := range line {
-			if c == 'S' {
-				return geom2d.Point{
-					X: x,
-					Y: y,
-				}, nil
-			}
-		}
-	}
-
-	return geom2d.Point{}, fmt.Errorf("no start position")
+	return distances
 }
 
 type state struct {
