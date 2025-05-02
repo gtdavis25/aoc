@@ -3,6 +3,7 @@ package day20
 import (
 	"fmt"
 	"io"
+	"iter"
 	"slices"
 
 	"github.com/gtdavis25/aoc/internal/geom2d"
@@ -43,18 +44,9 @@ func (s *Solver) Solve(r io.Reader, w io.Writer) error {
 				continue
 			}
 
-			p1 := geom2d.Point{X: x, Y: y}
-			for _, p2 := range []geom2d.Point{
-				p1.Add(geom2d.Up().Times(2)),
-				p1.Add(geom2d.Right().Times(2)),
-				p1.Add(geom2d.Down().Times(2)),
-				p1.Add(geom2d.Left().Times(2)),
-			} {
-				if !bounds.Contains(p2) || lines[p2.Y][p2.X] == '#' {
-					continue
-				}
-
-				if dStart[p1.Y][p1.X]+geom2d.GetDistance(p1, p2)+dEnd[p2.Y][p2.X] <= budget {
+			s := geom2d.Point{X: x, Y: y}
+			for e := range getCheatDestinations(lines, s, 2) {
+				if dStart[s.Y][s.X]+geom2d.GetDistance(s, e)+dEnd[e.Y][e.X] <= budget {
 					part1++
 				}
 			}
@@ -110,6 +102,41 @@ func getDistances(lines []string, origin geom2d.Point) [][]int {
 	}
 
 	return distances
+}
+
+func getCheatDestinations(lines []string, start geom2d.Point, maxSteps int) iter.Seq[geom2d.Point] {
+	return func(yield func(geom2d.Point) bool) {
+		bounds := geom2d.Rect{Width: len(lines[0]), Height: len(lines)}
+		seen := make(map[geom2d.Point]struct{})
+		queue := []state{{pos: start, t: 0}}
+		for len(queue) > 0 {
+			s := queue[0]
+			queue = queue[1:]
+			if _, ok := seen[s.pos]; ok {
+				continue
+			}
+
+			seen[s.pos] = struct{}{}
+			if lines[s.pos.Y][s.pos.X] != '#' && !yield(s.pos) {
+				return
+			}
+
+			if s.t >= maxSteps {
+				continue
+			}
+
+			for p := range s.pos.Adjacent() {
+				if _, ok := seen[p]; ok || !bounds.Contains(p) {
+					continue
+				}
+
+				queue = append(queue, state{
+					pos: p,
+					t:   s.t + 1,
+				})
+			}
+		}
+	}
 }
 
 type state struct {
